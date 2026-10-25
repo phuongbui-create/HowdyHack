@@ -209,6 +209,54 @@ a { color: inherit; text-decoration: none; }
 .list-page .days-left { left: 283px; top: 16px; width: 211px; }
 .list-page .due { left: 283px; top: 46px; width: 211px; }
 
+/* GPA: one cream bar per class, stacked and scrollable below "classes:" */
+.gpa-page .gpa-value { margin-left: 12px; }
+.gpa-page .gpa-message { left: 880px; top: 250px; margin: 0; font: 400 20px/normal var(--font-body); color: var(--blush); }
+
+.list-page .action:disabled { opacity: 0.45; cursor: default; transform: none; }
+
+.gpa-page .class-list {
+  left: 680px;
+  top: 293px;
+  width: 560px;
+  height: 520px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.gpa-page .class-list .task { position: relative; left: 0; top: 0; margin: 4px 4px 14px; width: 542px; cursor: pointer; }
+.gpa-page .class-list .task:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+.gpa-page .class-list .task.selected { border-color: var(--pink); box-shadow: 0 0 0 4px var(--pink); }
+.gpa-page .class-list .task.editing { background: #fff; cursor: default; }
+
+.gpa-page .empty-hint { margin-top: 8px; font: 400 26px/normal var(--font-hand); color: var(--cream); }
+
+.gpa-page .field .value { color: var(--royal); }
+
+.gpa-page .field { display: flex; align-items: baseline; gap: 6px; }
+.gpa-page .name { width: 200px; }
+.gpa-page .days-left { width: 255px; }
+
+.gpa-page .field input,
+.gpa-page .field select {
+  min-width: 0;
+  flex: 1;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 2px dashed var(--lavender);
+  background: transparent;
+  font: inherit;
+  color: var(--royal);
+  outline: none;
+}
+
+.gpa-page .field select { flex: none; width: 60px; cursor: pointer; }
+
+.gpa-page .field input:focus,
+.gpa-page .field select:focus { border-bottom-color: var(--pink); }
+
 .list-page .seaweed-right { left: 1082px; top: 561px; width: 225px; height: 287px; }
 .list-page .seaweed-left { left: -26px; top: 417px; width: 326px; height: 428px; }
 .list-page .seaweed-tall { left: 97px; top: 278px; width: 350.558px; height: 590.256px; }

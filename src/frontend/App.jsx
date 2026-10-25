@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 /* Shared page frame. The design is a fixed 1280x832 canvas scaled to fit the window. */
 function Layout({ title, page, children }) {
@@ -76,7 +76,7 @@ function Home() {
 }
 
 /* ---------- To-do and GPA share the same look ---------- */
-function ListPage({ title, page, heading, listLabel, thing, children }) {
+function ListPage({ title, page, heading, listLabel, thing, actions = {}, children }) {
   return (
     <Layout title={title} page={"list-page " + page}>
       <div className="crop aquarium">
@@ -99,25 +99,26 @@ function ListPage({ title, page, heading, listLabel, thing, children }) {
       </div>
       <h1 className="abs title outlined">{heading}</h1>
 
-      <button className="abs action add" type="button" aria-label={"Add " + thing}>
+      <button className="abs action add" type="button" aria-label={"Add " + thing} onClick={actions.onAdd}>
         <img src="/images/todo-add.png" alt="" />
       </button>
-      <button className="abs action edit" type="button" aria-label={"Edit " + thing}>
+      <button className="abs action edit" type="button" aria-label={"Edit " + thing}
+        onClick={actions.onEdit} disabled={actions.noSelection}>
         <img src="/images/todo-edit.png" alt="" />
       </button>
-      <button className="abs action delete" type="button" aria-label={"Delete " + thing}>
+      <button className="abs action delete" type="button" aria-label={"Delete " + thing}
+        onClick={actions.onDelete} disabled={actions.noSelection}>
         <img src="/images/todo-delete.png" alt="" />
       </button>
-      <button className="abs action clipboard" type="button" aria-label={thing + " details"}>
+      <button className="abs action clipboard" type="button"
+        aria-label={actions.clipboardLabel ?? thing + " details"} title={actions.clipboardLabel}
+        onClick={actions.onClipboard}>
         <img src="/images/todo-clipboard.png" alt="" />
       </button>
 
       <h2 className="abs my-tasks outlined">{listLabel}</h2>
 
-      <article className="abs task">
-        <span className="badge">1</span>
-        {children}
-      </article>
+      {children}
 
       <div className="crop seaweed-right">
         <img className="seaweed-right-img" src="/images/seaweed.png" alt="" />
@@ -135,20 +136,161 @@ function ListPage({ title, page, heading, listLabel, thing, children }) {
 function Todo() {
   return (
     <ListPage title="To-do List" page="todo-page" heading="TO-DO LIST" listLabel="My tasks:" thing="task">
-      <span className="field name">Task name</span>
-      <span className="field complete-by">Complete by:</span>
-      <span className="field days-left">| Days left:</span>
-      <span className="field due">| Due:</span>
+      <article className="abs task">
+        <span className="badge">1</span>
+        <span className="field name">Task name</span>
+        <span className="field complete-by">Complete by:</span>
+        <span className="field days-left">| Days left:</span>
+        <span className="field due">| Due:</span>
+      </article>
     </ListPage>
   );
 }
 
+/* ---------- GPA ---------- */
+const GRADES = ["A", "B", "C", "D", "F"];
+
+let nextClassId = 1;
+const emptyClass = () => ({ id: nextClassId++, subject: "", grade: "", hours: "" });
+
+const countsTowardGpa = (c) => GRADES.includes(c.grade) && Number(c.hours) > 0;
+
 function Gpa() {
+  const [classes, setClasses] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [gpa, setGpa] = useState(null);
+  const [message, setMessage] = useState("");
+
+  // Any change to the list makes the last GPA out of date, so hide it until "calculate" is pressed again.
+  const changeClasses = (next) => {
+    setClasses(next);
+    setGpa(null);
+    setMessage("");
+  };
+
+  const add = () => {
+    const c = emptyClass();
+    changeClasses([...classes, c]);
+    setSelectedId(c.id);
+    setEditingId(c.id);
+  };
+
+  const select = (id) => {
+    setSelectedId(id);
+    if (editingId !== id) setEditingId(null);
+  };
+
+  const edit = () => setEditingId(editingId === selectedId ? null : selectedId);
+
+  const remove = () => {
+    changeClasses(classes.filter((c) => c.id !== selectedId));
+    setSelectedId(null);
+    setEditingId(null);
+  };
+
+  const update = (id, key, value) =>
+    changeClasses(classes.map((c) => (c.id === id ? { ...c, [key]: value } : c)));
+
+  // Send the classes to the backend and show the GPA it calculates.
+  const calculate = async () => {
+    setEditingId(null);
+    if (classes.length === 0) return setMessage("Press + to add a class first");
+    const missing = classes.findIndex((c) => !countsTowardGpa(c));
+    if (missing !== -1) return setMessage(`Class ${missing + 1} needs a grade and credit hours`);
+
+    try {
+      const res = await fetch("/api/gpa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ classes: classes.map((c) => ({ ...c, hours: Number(c.hours) })) }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error);
+      setGpa(body.gpa);
+      setMessage("");
+    } catch {
+      setMessage("Couldn't reach the GPA calculator");
+    }
+  };
+
+  const heading = (
+    <>
+      GPA : <span className="gpa-value">{gpa ?? "-"}</span>
+    </>
+  );
+
+  const actions = {
+    onAdd: add,
+    onEdit: edit,
+    onDelete: remove,
+    onClipboard: calculate,
+    noSelection: selectedId === null,
+    clipboardLabel: "Calculate GPA",
+  };
+
   return (
-    <ListPage title="GPA Calculator" page="gpa-page" heading="GPA :" listLabel="classes:" thing="class">
-      <span className="field name">Subject:</span>
-      <span className="field complete-by">Grade:</span>
-      <span className="field days-left">| Credit hours:</span>
+    <ListPage title="GPA Calculator" page="gpa-page" heading={heading} listLabel="classes:" thing="class"
+      actions={actions}>
+      {message && <p className="abs gpa-message">{message}</p>}
+      <ol className="abs class-list">
+        {classes.length === 0 && <li className="empty-hint">Press + to add a class</li>}
+        {classes.map((c, i) => {
+          const editing = c.id === editingId;
+          return (
+            <li
+              key={c.id}
+              className={"task" + (c.id === selectedId ? " selected" : "") + (editing ? " editing" : "")}
+              tabIndex={0}
+              aria-selected={c.id === selectedId}
+              onClick={() => select(c.id)}
+              onKeyDown={(e) => {
+                if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  select(c.id);
+                }
+              }}
+            >
+              <span className="badge">{i + 1}</span>
+              <label className="field name">
+                Subject:
+                {editing ? (
+                  <input autoFocus value={c.subject} onChange={(e) => update(c.id, "subject", e.target.value)} />
+                ) : (
+                  <span className="value">{c.subject}</span>
+                )}
+              </label>
+              <label className="field complete-by">
+                Grade:
+                {editing ? (
+                  <select value={c.grade} onChange={(e) => update(c.id, "grade", e.target.value)}>
+                    <option value="">-</option>
+                    {GRADES.map((g) => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="value">{c.grade}</span>
+                )}
+              </label>
+              <label className="field days-left">
+                | Credit hours:
+                {editing ? (
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={c.hours}
+                    onChange={(e) => update(c.id, "hours", e.target.value)}
+                  />
+                ) : (
+                  <span className="value">{c.hours}</span>
+                )}
+              </label>
+            </li>
+          );
+        })}
+      </ol>
     </ListPage>
   );
 }
