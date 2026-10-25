@@ -46,16 +46,16 @@ function HomeLink() {
 const FISH = {
   angelfish: { src: "/images/home-angelfish.png", w: 150, h: 136,
     crop: { left: "-19.09%", top: "-31.46%", width: "154.62%", height: "161.65%" } },
-  orange: { src: "/images/fish-orange.png", w: 170, h: 105,
-    crop: { left: "-7.07%", top: "-74.53%", width: "110.82%", height: "179.44%" } },
+  orange: { src: "/images/fish-orange.png", w: 170, h: 101,
+    crop: { left: "-17.31%", top: "-57.4%", width: "131.49%", height: "209.83%" } },
   teal: { src: "/images/fish-teal.png", w: 190, h: 89,
-    crop: { left: "-18.04%", top: "-37.16%", width: "121.52%", height: "259.46%" } },
+    crop: { left: "-5.31%", top: "-59.8%", width: "120.83%", height: "258.91%" } },
   yellow: { src: "/images/fish-yellow.png", w: 135, h: 105,
     crop: { left: "-153.72%", top: "-18.26%", width: "259.46%", height: "333.91%" } },
-  brown: { src: "/images/fish-brown.png", w: 190, h: 60,
-    crop: { left: "-5.96%", top: "-275.63%", width: "123.67%", height: "389.85%" } },
-  blue: { src: "/images/fish-blue.png", w: 150, h: 110,
-    crop: { left: "-7.66%", top: "-10.41%", width: "178.19%", height: "242.27%" } },
+  brown: { src: "/images/fish-brown.png", w: 190, h: 61,
+    crop: { left: "-4.14%", top: "-117.17%", width: "107.92%", height: "315.94%" } },
+  blue: { src: "/images/fish-blue.png", w: 150, h: 115,
+    crop: { left: "-27.29%", top: "-37.33%", width: "139.7%", height: "182.04%" } },
 };
 
 /* Where each fish sits (its centre point), which way it faces, and its bobbing rhythm.
@@ -141,7 +141,7 @@ function Home() {
         </div>
         <div className="sidebar menu-sidebar"></div>
         <div className="crop seaweed-right">
-          <img className="seaweed-right-img" src="/images/seaweed.png" alt="" />
+          <img className="seaweed-right-img" src="/images/seaweed-right.gif" alt="" />
         </div>
 
         <h1 className="abs welcome">Welcome to<br />My Aquarium</h1>
@@ -243,7 +243,7 @@ function ListPage({ title, page, heading, listLabel, thing, actions = {}, childr
       {children}
 
       <div className="crop seaweed-right">
-        <img className="seaweed-right-img" src="/images/seaweed.png" alt="" />
+        <img className="seaweed-right-img" src="/images/seaweed-right.gif" alt="" />
       </div>
       <div className="crop seaweed-left">
         <img className="seaweed-left-img" src="/images/seaweed-left.gif" alt="" />
@@ -598,20 +598,20 @@ function Gpa() {
 /* ---------- Fish shop ---------- */
 const items = [
   { x: 712, y: 182, price: "price 10", priceX: 764, priceY: 336, coinX: 841, coinY: 328,
-    fish: { src: "/images/fish-teal.png", name: "Teal fish", id: "teal", cost: 10, x: 691, y: 178, w: 219, h: 219,
-      crop: { left: "0", top: "0", width: "100%", height: "100%" } } },
+    fish: { src: "/images/fish-teal.png", name: "Teal fish", id: "teal", cost: 10, x: 725, y: 215, w: 172, h: 80,
+      crop: FISH.teal.crop } },
   { x: 1012, y: 182, price: "price 20", priceX: 1049, priceY: 338, coinX: 1132, coinY: 328,
-    fish: { src: "/images/fish-brown.png", name: "Brown fish", id: "brown", cost: 20, x: 1010, y: 212, w: 224, h: 76,
-      crop: { left: "0", top: "-194.25%", width: "100%", height: "294.25%" } } },
+    fish: { src: "/images/fish-brown.png", name: "Brown fish", id: "brown", cost: 20, x: 1025, y: 227, w: 172, h: 56,
+      crop: FISH.brown.crop } },
   { x: 712, y: 393, price: "price 1000", priceX: 745, priceY: 553, coinX: 854, coinY: 542,
     fish: { src: "/images/fish-yellow.png", name: "Yellow fish", id: "yellow", cost: 1000, x: 691, y: 397, w: 198, h: 143,
       crop: { left: "-85.51%", top: "0", width: "185.51%", height: "256.86%" } } },
   { x: 1012, y: 393, price: "price  30", priceX: 1059, priceY: 552, coinX: 1155, coinY: 545,
-    fish: { src: "/images/fish-blue.png", name: "Blue fish", id: "blue", cost: 30, x: 1022, y: 395, w: 199, h: 147,
-      crop: { left: "-3.18%", top: "-3.23%", width: "152.68%", height: "207.01%" } } },
+    fish: { src: "/images/fish-blue.png", name: "Blue fish", id: "blue", cost: 30, x: 1034, y: 407, w: 154, h: 118,
+      crop: FISH.blue.crop } },
   { x: 712, y: 604, price: "price 25", priceX: 757, priceY: 757, coinX: 839, coinY: 748,
-    fish: { src: "/images/fish-orange.png", name: "Orange fish", id: "orange", cost: 25, x: 714, y: 597, w: 196, h: 141,
-      crop: { left: "0", top: "-39.22%", width: "100%", height: "139.22%" } } },
+    fish: { src: "/images/fish-orange.png", name: "Orange fish", id: "orange", cost: 25, x: 725, y: 626, w: 172, h: 102,
+      crop: FISH.orange.crop } },
   { x: 1012, y: 604, price: "price 100", priceX: 1049, priceY: 760, coinX: 1145, coinY: 750,
     fish: { src: "/images/home-angelfish.png", name: "Angelfish", id: "angelfish", cost: 100, x: 981, y: 569, w: 229, h: 216, flip: true,
       crop: { left: "0", top: "0", width: "100%", height: "100%", objectFit: "cover" } } },
