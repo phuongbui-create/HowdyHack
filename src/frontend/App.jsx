@@ -701,37 +701,156 @@ function FishShop() {
 }
 
 /* ---------- Calendar ---------- */
-const week = [
-  { day: "Monday", events: [
-    { lines: ["MATH 151 HW", "Due at 11:59 pm"], color: "#f71266" },
-    { lines: ["Post lab", "Due at 5:00 pm"], color: "#4dc8c0" },
-    { lines: ["Robotics team", "meeting"], color: "#202256", light: true },
-  ] },
-  { day: "Tuesday", events: [
-    { lines: ["Career fair"], color: "#202256", light: true },
-    { lines: ["ENGR 102 HW", "Due at 11:59 pm"], color: "#1b6fed" },
-    { lines: ["CHEM 107 HW", "Due at 11:59 pm"], color: "#f9ffc3" },
-  ] },
-  { day: "Wednesday", events: [
-    { lines: ["MATH LAB", "Due at 2:00 pm"], color: "#f71266" },
-    { lines: ["Social event"], color: "#202256", light: true },
-  ] },
-  { day: "Thursday", events: [
-    { lines: ["Study for POLS", "207"], color: "#f5df86" },
-    { lines: ["CHEM 107 HW", "Due at 3:00 pm"], color: "#f9ffc3" },
-  ] },
-  { day: "Friday", events: [
-    { lines: ["Club Meeting"], color: "#202256", light: true },
-  ] },
-  { day: "Saturday", events: [
-    { lines: ["CHEM 107 HW", "Due at 3:00 pm"], color: "#f9ffc3" },
-  ] },
-  { day: "Sunday", events: [
-    { lines: ["Study for Math 151"], color: "#f71266" },
-  ] },
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+// Entry colours from the design (must match COLORS in src/backend/calendar.js); navy uses white text
+const ENTRY_COLORS = [
+  { value: "#f71266", name: "Pink" },
+  { value: "#4dc8c0", name: "Teal" },
+  { value: "#1b6fed", name: "Blue" },
+  { value: "#f9ffc3", name: "Light yellow" },
+  { value: "#f5df86", name: "Gold" },
+  { value: "#202256", name: "Navy" },
 ];
+const isDark = (color) => color === "#202256";
+
+// "10/31" reads as "Due 10/31"; a time such as "11:59 pm" reads as "Due at 11:59 pm"
+const dueLabel = (due) => (/^\d{1,2}\/\d{1,2}$/.test(due) ? "Due " + due : "Due at " + due);
+
+/* Pop-up form for adding or editing an entry */
+function EntryForm({ entry, onSave, onCancel }) {
+  const [fields, setFields] = useState(entry);
+  const set = (key, value) => setFields((f) => ({ ...f, [key]: value }));
+
+  return (
+    <div className="abs form-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onCancel()}>
+      <form
+        className="entry-form"
+        role="dialog"
+        aria-labelledby="entry-form-title"
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSave(fields);
+        }}
+        onKeyDown={(e) => e.key === "Escape" && onCancel()}
+      >
+        <h2 id="entry-form-title">{entry.id ? "Edit entry" : "New entry"}</h2>
+        <label>
+          Task name
+          <input autoFocus value={fields.title} maxLength={60} onChange={(e) => set("title", e.target.value)} />
+        </label>
+        <label>
+          Day
+          <select value={fields.day} onChange={(e) => set("day", Number(e.target.value))}>
+            {DAYS.map((d, i) => (
+              <option key={d} value={i}>{d}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Due <span className="optional">(optional)</span>
+          <input
+            value={fields.due}
+            maxLength={20}
+            placeholder="e.g. 11:59 pm or 10/31"
+            onChange={(e) => set("due", e.target.value)}
+          />
+        </label>
+        <fieldset>
+          <legend>Colour</legend>
+          {ENTRY_COLORS.map((c) => (
+            <label key={c.value} className="swatch" title={c.name}>
+              <input
+                type="radio"
+                name="color"
+                value={c.value}
+                checked={fields.color === c.value}
+                onChange={() => set("color", c.value)}
+                aria-label={c.name}
+              />
+              <span style={{ background: c.value }} />
+            </label>
+          ))}
+        </fieldset>
+        <div className="form-buttons">
+          <button type="button" onClick={onCancel}>Cancel</button>
+          <button type="submit" className="primary">Save</button>
+        </div>
+      </form>
+    </div>
+  );
+}
 
 function Calendar() {
+  const [entries, setEntries] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [form, setForm] = useState(null); // the entry being added or edited, or null
+  const [dragOverDay, setDragOverDay] = useState(null);
+  const [message, setMessage] = useState("");
+
+  const fail = (err) =>
+    setMessage(err.message === "Failed to fetch" ? "Couldn't reach the calendar server" : err.message);
+
+  const reload = () => api("GET", "/api/calendar").then(setEntries).catch(fail);
+  useEffect(() => {
+    reload();
+  }, []);
+
+  const selected = entries.find((e) => e.id === selectedId);
+
+  const add = () => {
+    // New entries go on the selected entry's day, or Monday, and take the next colour in turn
+    const color = ENTRY_COLORS[entries.length % ENTRY_COLORS.length].value;
+    setForm({ title: "", day: selected?.day ?? 0, due: "", color });
+  };
+
+  const save = async (fields) => {
+    try {
+      const body = { title: fields.title, day: fields.day, due: fields.due, color: fields.color };
+      if (fields.id) {
+        const saved = await api("PUT", `/api/calendar/${fields.id}`, body);
+        // a change of day moves the entry to the bottom of its new day, so reload to get the order right
+        if (saved.day !== entries.find((e) => e.id === saved.id)?.day) await reload();
+        else setEntries((all) => all.map((e) => (e.id === saved.id ? saved : e)));
+      } else {
+        const saved = await api("POST", "/api/calendar", body);
+        setEntries((all) => [...all, saved]);
+        setSelectedId(saved.id);
+      }
+      setForm(null);
+      setMessage("");
+    } catch (err) {
+      fail(err);
+    }
+  };
+
+  const remove = async () => {
+    if (!selected) return;
+    try {
+      await api("DELETE", `/api/calendar/${selected.id}`);
+      setEntries((all) => all.filter((e) => e.id !== selected.id));
+      setSelectedId(null);
+      setMessage(`Deleted "${selected.title}"`);
+    } catch (err) {
+      fail(err);
+    }
+  };
+
+  const moveTo = async (id, day) => {
+    const entry = entries.find((e) => e.id === id);
+    if (!entry || entry.day === day) return;
+    // show the move straight away (at the bottom of the new day), then save it
+    setEntries((all) => [...all.filter((e) => e.id !== id), { ...entry, day }]);
+    setSelectedId(id);
+    try {
+      await api("PUT", `/api/calendar/${id}`, { day });
+      setMessage(`Moved "${entry.title}" to ${DAYS[day]}`);
+    } catch (err) {
+      fail(err);
+      reload();
+    }
+  };
+
   return (
     <Layout title="Calendar" page="calendar-page">
       <div className="crop aquarium">
@@ -758,20 +877,63 @@ function Calendar() {
       </div>
       <HomeLink />
       <h1 className="abs title">CALENDAR</h1>
-      <button className="abs add-event" type="button" aria-label="Add event">
+      <button className="abs action add-event" type="button" aria-label="Add entry" onClick={add}>
         <img src="/images/todo-add.png" alt="" />
+      </button>
+      <button className="abs action edit-event" type="button" aria-label="Edit selected entry"
+        disabled={!selected} onClick={() => setForm({ ...selected })}>
+        <img src="/images/todo-edit.png" alt="" />
+      </button>
+      <button className="abs action delete-event" type="button" aria-label="Delete selected entry"
+        disabled={!selected} onClick={remove}>
+        <img src="/images/todo-delete.png" alt="" />
       </button>
 
       <ol className="abs week">
-        {week.map(({ day, events }) => (
+        {DAYS.map((day, dayIndex) => (
           <li key={day} className="day">
             <h2 className="day-name">{day}</h2>
-            <ul className="day-column">
-              {events.map((e, i) => (
-                <li key={i} className={"event" + (e.light ? " light" : "")} style={{ background: e.color }}>
-                  {e.lines.map((line) => (
-                    <span key={line}>{line}</span>
-                  ))}
+            <ul
+              className={"day-column" + (dragOverDay === dayIndex ? " drag-over" : "")}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                setDragOverDay(dayIndex);
+              }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget)) setDragOverDay(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOverDay(null);
+                moveTo(Number(e.dataTransfer.getData("text/plain")), dayIndex);
+              }}
+            >
+              {entries.filter((e) => e.day === dayIndex).map((entry) => (
+                <li
+                  key={entry.id}
+                  className={"event" + (isDark(entry.color) ? " light" : "") + (entry.id === selectedId ? " selected" : "")}
+                  style={{ background: entry.color }}
+                  draggable
+                  tabIndex={0}
+                  aria-selected={entry.id === selectedId}
+                  onClick={() => setSelectedId(entry.id)}
+                  onDoubleClick={() => setForm({ ...entry })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedId(entry.id);
+                    }
+                  }}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("text/plain", String(entry.id));
+                    e.dataTransfer.effectAllowed = "move";
+                    setSelectedId(entry.id);
+                  }}
+                  onDragEnd={() => setDragOverDay(null)}
+                >
+                  <span className="event-title">{entry.title}</span>
+                  {entry.due && <span className="event-due">{dueLabel(entry.due)}</span>}
                 </li>
               ))}
             </ul>
@@ -779,9 +941,13 @@ function Calendar() {
         ))}
       </ol>
 
+      {message && <p className="abs calendar-message" aria-live="polite">{message}</p>}
+
       <div className="crop seaweed-left">
         <img className="seaweed-left-img" src="/images/seaweed-left.gif" alt="" />
       </div>
+
+      {form && <EntryForm entry={form} onSave={save} onCancel={() => setForm(null)} />}
     </Layout>
   );
 }

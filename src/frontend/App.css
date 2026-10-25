@@ -369,13 +369,13 @@ a { color: inherit; text-decoration: none; }
 .calendar-page .seaweed-tall { left: 97px; top: 278px; width: 350.558px; height: 590.256px; }
 .calendar-page .seaweed-left { left: -26px; top: 417px; width: 326px; height: 428px; }
 .calendar-page .calendar-sidebar { left: 150px; top: -2px; width: 1130px; height: 834px; }
-.calendar-page .title-banner { left: 445px; top: 18px; width: 433px; height: 107px; }
+.calendar-page .title-banner { left: 324px; top: 18px; width: 433px; height: 107px; }
 
-/* Header: house, title and + centred over the week */
-.calendar-page .home-link { left: 445px; top: 41px; }
+/* Header row centred over the week: house, title, then the +, pen and trash buttons */
+.calendar-page .home-link { left: 324px; top: 41px; }
 
 .calendar-page .title {
-  left: 538px;
+  left: 417px;
   top: 26px;
   margin: 0;
   font: 400 70px/normal var(--font-hand);
@@ -385,11 +385,10 @@ a { color: inherit; text-decoration: none; }
   white-space: nowrap;
 }
 
-.calendar-page .add-event {
-  left: 885px;
-  top: 18px;
-  width: 100px;
-  height: 100px;
+.calendar-page .action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   border: 0;
   background: none;
@@ -397,10 +396,16 @@ a { color: inherit; text-decoration: none; }
   transition: transform 0.15s ease;
 }
 
-.calendar-page .add-event img { width: 100px; height: 100px; object-fit: cover; pointer-events: none; }
+.calendar-page .action img { flex: none; width: 100px; height: 100px; object-fit: cover; pointer-events: none; }
+.calendar-page .action:hover,
+.calendar-page .action:focus-visible { transform: scale(1.08); }
+.calendar-page .action:disabled { opacity: 0.45; cursor: default; transform: none; }
 
-.calendar-page .add-event:hover,
-.calendar-page .add-event:focus-visible { transform: scale(1.08); }
+.calendar-page .add-event { left: 764px; top: 18px; width: 100px; height: 100px; }
+.calendar-page .edit-event { left: 874px; top: 10px; width: 116.845px; height: 116.845px; }
+.calendar-page .edit-event img { rotate: 10.71deg; }
+.calendar-page .delete-event { left: 1001px; top: 16px; width: 104.808px; height: 104.808px; }
+.calendar-page .delete-event img { rotate: 2.83deg; }
 
 /* Seven columns fill the sidebar: 7 x 142px + 6 x 14px gaps */
 .calendar-page .week {
@@ -434,9 +439,13 @@ a { color: inherit; text-decoration: none; }
   border-radius: 10px;
   background: var(--cream);
   list-style: none;
+  overflow-y: auto;
+  transition: box-shadow 0.15s ease;
 }
 
 .calendar-page .day:nth-child(even) .day-column { background: var(--pink); }
+/* The day an entry is being dragged over */
+.calendar-page .day-column.drag-over { box-shadow: inset 0 0 0 4px #3b62b4; }
 
 .calendar-page .event {
   display: flex;
@@ -444,14 +453,92 @@ a { color: inherit; text-decoration: none; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 60px;
+  min-height: 60px;
+  padding: 6px 3px;
   border-radius: 15px;
   font: 400 17px/normal var(--font-hand);
   color: black;
   text-align: center;
+  overflow-wrap: anywhere;
+  cursor: grab;
 }
 
+.calendar-page .event:active { cursor: grabbing; }
+.calendar-page .event-due { white-space: nowrap; }
 .calendar-page .event.light { color: white; }
+.calendar-page .event:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+.calendar-page .event.selected { box-shadow: 0 0 0 3px white, 0 0 0 6px #3b62b4; }
+
+.calendar-page .calendar-message {
+  left: 172px;
+  top: 811px;
+  width: 1078px;
+  margin: 0;
+  font: 400 16px/normal var(--font-body);
+  color: var(--blush);
+  text-align: center;
+}
+
+/* Add / edit form, shown over a dimmed calendar */
+.calendar-page .form-backdrop {
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  background: rgba(24, 27, 86, 0.6);
+}
+
+.calendar-page .entry-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 420px;
+  padding: 24px 28px;
+  border: 4px solid var(--pink);
+  border-radius: 24px;
+  background: var(--cream);
+  font: 400 22px/normal var(--font-body);
+  color: var(--royal);
+}
+
+.calendar-page .entry-form h2 { margin: 0; font: 400 40px/normal var(--font-hand); color: var(--pink); text-align: center; }
+.calendar-page .entry-form > label { display: flex; flex-direction: column; gap: 4px; }
+.calendar-page .entry-form .optional { color: var(--lavender); font-size: 18px; }
+
+.calendar-page .entry-form input:not([type="radio"]),
+.calendar-page .entry-form select {
+  padding: 6px 10px;
+  border: 2px solid var(--lavender);
+  border-radius: 10px;
+  background: white;
+  font: inherit;
+  color: var(--royal);
+  outline: none;
+}
+
+.calendar-page .entry-form input:focus,
+.calendar-page .entry-form select:focus { border-color: var(--pink); }
+
+.calendar-page .entry-form fieldset { display: flex; gap: 10px; margin: 0; padding: 0; border: 0; }
+.calendar-page .entry-form legend { margin-bottom: 6px; padding: 0; }
+.calendar-page .swatch { position: relative; cursor: pointer; }
+.calendar-page .swatch input { position: absolute; opacity: 0; }
+.calendar-page .swatch span { display: block; width: 36px; height: 36px; border: 2px solid var(--lavender); border-radius: 50%; }
+.calendar-page .swatch input:checked + span { box-shadow: 0 0 0 3px var(--cream), 0 0 0 6px var(--pink); }
+.calendar-page .swatch input:focus-visible + span { outline: 3px solid var(--sky); outline-offset: 4px; }
+
+.calendar-page .form-buttons { display: flex; justify-content: flex-end; gap: 12px; margin-top: 4px; }
+.calendar-page .form-buttons button {
+  padding: 6px 20px;
+  border: 2px solid var(--pink);
+  border-radius: 14px;
+  background: white;
+  font: 400 24px/normal var(--font-hand);
+  color: var(--pink);
+  cursor: pointer;
+}
+
+.calendar-page .form-buttons .primary { background: var(--pink); color: white; }
 
 /* ---------- Fish shop ---------- */
 .shop .aquarium,
