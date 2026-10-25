@@ -12,7 +12,8 @@
     "astro": "astro",
     "react": "vite",
     "react:build": "vite build",
-    "backend": "node --watch src/backend/index.js"
+    "backend": "node --watch src/backend/index.js",
+    "react:preview": "vite preview"
   },
   "dependencies": {
     "astro": "^7.4.2",
