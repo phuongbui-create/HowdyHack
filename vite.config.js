@@ -10,7 +10,7 @@ export default defineConfig({
     port: 5173,
     proxy: { "/api": "http://localhost:3001" },
   },
-  // `npm run react:preview` serves the built site; it can be shared through a Cloudflare quick tunnel
+  // `npm run preview` serves the built site; it can be shared through a Cloudflare quick tunnel
   preview: {
     port: 4173,
     proxy: { "/api": "http://localhost:3001" },

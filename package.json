@@ -6,17 +6,12 @@
     "node": ">=22.23.4"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro",
-    "react": "vite",
-    "react:build": "vite build",
+    "dev": "vite",
     "backend": "node --watch src/backend/index.js",
-    "react:preview": "vite preview"
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "astro": "^7.4.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

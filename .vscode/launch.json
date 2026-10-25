@@ -2,8 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "command": "./node_modules/.bin/astro dev",
-      "name": "Development server",
+      "command": "npm run dev",
+      "name": "Website (Vite)",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
+      "command": "npm run backend",
+      "name": "Backend",
       "request": "launch",
       "type": "node-terminal"
     }
