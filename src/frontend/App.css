@@ -68,7 +68,8 @@ body { background: var(--sidebar-bg); overflow: hidden; }
 .aquarium-img { left: 0.01%; top: -0.04%; width: 107.48%; height: 100%; }
 .rock-img { left: 0; top: -15.29%; width: 100%; height: 115.23%; }
 .seaweed-left-img { left: 14.65%; top: -4.72%; width: 70.64%; height: 109.6%; }
-.seaweed-right-img { left: -222.25%; top: -60.36%; width: 303.19%; height: 178.27%; }
+/* Animated seaweed in the sidebar corner, lined up with where the old still image sat */
+.seaweed-right-img { left: -4.76%; top: -1.01%; width: 82.13%; height: 106.31%; }
 .rock-layer { inset: 0; }
 
 .sidebar { position: absolute; background: var(--sidebar-bg); }
