@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { calculateGpa } from "./gpa.js";
 import { addTask, listTasks, removeTask, updateTask } from "./tasks.js";
+import { TASK_REWARD, buyFish, earn, getAquarium } from "./aquarium.js";
 
 const PORT = Number(process.env.PORT) || 3001;
 
@@ -32,11 +33,15 @@ function readJson(req) {
  * GET    /api/tasks      -> [{ id, name, completeBy, due, daysLeft }]
  * POST   /api/tasks      { name, completeBy, due } -> the new task
  * PUT    /api/tasks/:id  { name, completeBy, due } -> the updated task
- * DELETE /api/tasks/:id  -> { ok: true }   (also used when a task is checked off)
+ * DELETE /api/tasks/:id  -> { ok: true }
+ * POST   /api/tasks/:id/complete -> { balance, owned }   (removes the task and pays the reward)
+ * GET    /api/aquarium   -> { balance, owned: ["angelfish", ...] }
+ * POST   /api/shop/buy   { fish } -> { balance, owned }
  */
 const server = createServer(async (req, res) => {
   const { method, url } = req;
   const taskId = Number(/^\/api\/tasks\/(\d+)$/.exec(url)?.[1]);
+  const completedId = Number(/^\/api\/tasks\/(\d+)\/complete$/.exec(url)?.[1]);
 
   try {
     if (method === "POST" && url === "/api/gpa") {
@@ -55,6 +60,16 @@ const server = createServer(async (req, res) => {
     }
     if (method === "DELETE" && taskId) {
       return removeTask(taskId) ? send(res, 200, { ok: true }) : send(res, 404, { error: "Task not found" });
+    }
+    if (method === "POST" && completedId) {
+      return removeTask(completedId) ? send(res, 200, earn(TASK_REWARD)) : send(res, 404, { error: "Task not found" });
+    }
+    if (method === "GET" && url === "/api/aquarium") {
+      return send(res, 200, getAquarium());
+    }
+    if (method === "POST" && url === "/api/shop/buy") {
+      const { fish } = await readJson(req);
+      return send(res, 200, buyFish(fish));
     }
     send(res, 404, { error: "Not found" });
   } catch (err) {

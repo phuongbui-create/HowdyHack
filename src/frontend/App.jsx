@@ -20,6 +20,18 @@ function Layout({ title, page, children }) {
   );
 }
 
+/* Talks to the backend (src/backend); throws with the server's message when a request is refused */
+async function api(method, url, body) {
+  const res = await fetch(url, {
+    method,
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
+}
+
 /* House icon that returns to the home page */
 function HomeLink() {
   return (
@@ -40,10 +52,15 @@ const FISH = {
     crop: { left: "-18.04%", top: "-37.16%", width: "121.52%", height: "259.46%" } },
   yellow: { src: "/images/fish-yellow.png", w: 135, h: 105,
     crop: { left: "-153.72%", top: "-18.26%", width: "259.46%", height: "333.91%" } },
+  brown: { src: "/images/fish-brown.png", w: 190, h: 60,
+    crop: { left: "-5.96%", top: "-275.63%", width: "123.67%", height: "389.85%" } },
+  blue: { src: "/images/fish-blue.png", w: 150, h: 110,
+    crop: { left: "-7.66%", top: "-10.41%", width: "178.19%", height: "242.27%" } },
 };
 
 /* Where each fish sits (its centre point), which way it faces, and its bobbing rhythm.
-   Fish on the left face right and fish on the right face left, so pairs face each other. */
+   Fish on the left face right and fish on the right face left, so pairs face each other.
+   Only fish the user owns are shown; the rest appear once they are bought in the shop. */
 const FISH_LAYOUTS = {
   // Home: aquarium is about 900px wide, so the fish zig-zag in four evenly spaced columns.
   wide: [
@@ -51,6 +68,8 @@ const FISH_LAYOUTS = {
     { fish: "yellow", x: 385, y: 340, speed: 3.8, delay: -1.2 },
     { fish: "teal", x: 605, y: 130, flip: true, speed: 3.5, delay: -2.1 },
     { fish: "orange", x: 790, y: 340, flip: true, speed: 4, delay: -0.6 },
+    { fish: "blue", x: 385, y: 120, speed: 3.4, delay: -2.6 },
+    { fish: "brown", x: 588, y: 350, speed: 3.6, delay: -1.8 },
   ],
   // To-do, GPA and Fish shop: aquarium is about 620px wide, so the fish sit in a staggered 2 x 2.
   narrow: [
@@ -58,11 +77,26 @@ const FISH_LAYOUTS = {
     { fish: "teal", x: 450, y: 160, flip: true, speed: 3.5, delay: -2.1 },
     { fish: "yellow", x: 160, y: 285, speed: 3.8, delay: -1.2 },
     { fish: "orange", x: 470, y: 340, flip: true, speed: 4, delay: -0.6 },
+    { fish: "blue", x: 300, y: 230, speed: 3.4, delay: -2.6 },
+    { fish: "brown", x: 300, y: 470, speed: 3.6, delay: -1.8 },
   ],
 };
 
-function AquariumFish({ layout }) {
-  return FISH_LAYOUTS[layout].map(({ fish, x, y, flip, speed, delay }) => {
+/* The user's sand dollar balance and the fish in their aquarium, loaded from the backend.
+   Until it loads (or if the backend is down) the aquarium shows the starting fish. */
+const STARTING_FISH = ["orange"];
+
+function useAquarium() {
+  const [aquarium, setAquarium] = useState({ balance: null, owned: STARTING_FISH });
+  useEffect(() => {
+    api("GET", "/api/aquarium").then(setAquarium).catch(() => {});
+  }, []);
+  return [aquarium, setAquarium];
+}
+
+function AquariumFish({ layout, owned }) {
+  const shown = FISH_LAYOUTS[layout].filter(({ fish }) => owned.includes(fish));
+  return shown.map(({ fish, x, y, flip, speed, delay }) => {
     const { src, w, h, crop } = FISH[fish];
     return (
       <div key={fish} className="aquarium-fish floating"
@@ -76,8 +110,25 @@ function AquariumFish({ layout }) {
   });
 }
 
+/* Rising bubbles over the aquarium; the GIFs loop forever and each page sets the water's width.
+   The second copy rises through the middle of the water. Its file starts half a loop (about 3s)
+   later, so the two sets of bubbles never rise together. */
+function Bubbles() {
+  return (
+    <>
+      <div className="crop bubbles">
+        <img src="/images/bubbles.gif" alt="" />
+      </div>
+      <div className="crop bubbles center">
+        <img src="/images/bubbles-offset.gif" alt="" />
+      </div>
+    </>
+  );
+}
+
 /* ---------- Home ---------- */
 function Home() {
+  const [{ owned }] = useAquarium();
   return (
     <Layout title="My Aquarium" page="home">
       <div className="crop aquarium">
@@ -131,7 +182,8 @@ function Home() {
         </div>
       </div>
 
-      <AquariumFish layout="wide" />
+      <AquariumFish layout="wide" owned={owned} />
+      <Bubbles />
 
       <div className="abs rot-7 seaweed-tall">
         <img src="/images/seaweed-tall.gif" alt="" />
@@ -142,6 +194,7 @@ function Home() {
 
 /* ---------- To-do and GPA share the same look ---------- */
 function ListPage({ title, page, heading, listLabel, thing, actions = {}, children }) {
+  const [{ owned }] = useAquarium();
   return (
     <Layout title={title} page={"list-page " + page}>
       <div className="crop aquarium">
@@ -157,7 +210,8 @@ function ListPage({ title, page, heading, listLabel, thing, actions = {}, childr
         </div>
       </div>
 
-      <AquariumFish layout="narrow" />
+      <AquariumFish layout="narrow" owned={owned} />
+      <Bubbles />
 
       <div className="sidebar todo-sidebar"></div>
       <HomeLink />
@@ -218,17 +272,6 @@ const describeDaysLeft = (days) => {
   if (days === 0) return "Today";
   return days === 1 ? "1 day" : days + " days";
 };
-
-async function api(method, url, body) {
-  const res = await fetch(url, {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error);
-  return data;
-}
 
 function Todo() {
   const [tasks, setTasks] = useState([]);
@@ -306,11 +349,29 @@ function Todo() {
     return true;
   };
 
-  // Checking a task off shows a tick, then the bar fades out and is removed.
+  // Checking a task off shows a tick, then the bar fades out and is removed, and the backend
+  // pays the sand dollar reward. A bar that was never saved is saved first so it counts.
   const checkOff = (id) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    if (!isSaved(task) && !task.name.trim()) {
+      setMessage("Give the task a name before checking it off");
+      return;
+    }
     setDoneIds((ids) => [...ids, id]);
     setTimeout(async () => {
-      if (!(await remove(id))) setDoneIds((ids) => ids.filter((d) => d !== id));
+      try {
+        const fields = { name: task.name, completeBy: task.completeBy, due: task.due };
+        const savedId = isSaved(task) ? id : (await api("POST", "/api/tasks", fields)).id;
+        const { balance } = await api("POST", `/api/tasks/${savedId}/complete`);
+        drop(id);
+        if (selectedId === id) setSelectedId(null);
+        if (editingId === id) setEditingId(null);
+        setMessage(`+5 sand dollars! You have ${balance} now.`);
+      } catch (err) {
+        setDoneIds((ids) => ids.filter((d) => d !== id));
+        setMessage(err.message === "Failed to fetch" ? "Couldn't reach the to-do list server" : err.message);
+      }
     }, 600);
   };
 
@@ -536,25 +597,41 @@ function Gpa() {
 
 /* ---------- Fish shop ---------- */
 const items = [
-  { x: 713, y: 183, price: "price 10", priceX: 765, priceY: 337, coinX: 842, coinY: 329,
-    fish: { src: "/images/fish-teal.png", name: "Teal fish", x: 691, y: 178, w: 219, h: 219,
+  { x: 712, y: 182, price: "price 10", priceX: 764, priceY: 336, coinX: 841, coinY: 328,
+    fish: { src: "/images/fish-teal.png", name: "Teal fish", id: "teal", cost: 10, x: 691, y: 178, w: 219, h: 219,
       crop: { left: "0", top: "0", width: "100%", height: "100%" } } },
-  { x: 1013, y: 183, price: "price 20", priceX: 1050, priceY: 339, coinX: 1133, coinY: 329,
-    fish: { src: "/images/fish-brown.png", name: "Brown fish", x: 1010, y: 212, w: 224, h: 76,
+  { x: 1012, y: 182, price: "price 20", priceX: 1049, priceY: 338, coinX: 1132, coinY: 328,
+    fish: { src: "/images/fish-brown.png", name: "Brown fish", id: "brown", cost: 20, x: 1010, y: 212, w: 224, h: 76,
       crop: { left: "0", top: "-194.25%", width: "100%", height: "294.25%" } } },
-  { x: 713, y: 394, price: "price 1000", priceX: 745, priceY: 554, coinX: 855, coinY: 543,
-    fish: { src: "/images/fish-yellow.png", name: "Yellow fish", x: 691, y: 397, w: 198, h: 143,
+  { x: 712, y: 393, price: "price 1000", priceX: 745, priceY: 553, coinX: 854, coinY: 542,
+    fish: { src: "/images/fish-yellow.png", name: "Yellow fish", id: "yellow", cost: 1000, x: 691, y: 397, w: 198, h: 143,
       crop: { left: "-85.51%", top: "0", width: "185.51%", height: "256.86%" } } },
-  { x: 1013, y: 394, price: "price  30", priceX: 1060, priceY: 553, coinX: 1156, coinY: 546,
-    fish: { src: "/images/fish-blue.png", name: "Blue fish", x: 1022, y: 395, w: 199, h: 147,
+  { x: 1012, y: 393, price: "price  30", priceX: 1059, priceY: 552, coinX: 1155, coinY: 545,
+    fish: { src: "/images/fish-blue.png", name: "Blue fish", id: "blue", cost: 30, x: 1022, y: 395, w: 199, h: 147,
       crop: { left: "-3.18%", top: "-3.23%", width: "152.68%", height: "207.01%" } } },
-  { x: 713, y: 605, price: "price 25", priceX: 758, priceY: 753, coinX: 839, coinY: 748,
-    fish: { src: "/images/fish-orange.png", name: "Orange fish", x: 714, y: 597, w: 196, h: 141,
+  { x: 712, y: 604, price: "price 25", priceX: 757, priceY: 757, coinX: 839, coinY: 748,
+    fish: { src: "/images/fish-orange.png", name: "Orange fish", id: "orange", cost: 25, x: 714, y: 597, w: 196, h: 141,
       crop: { left: "0", top: "-39.22%", width: "100%", height: "139.22%" } } },
-  { x: 1013, y: 605, price: "price ", priceX: 1076, priceY: 757, coinX: 1132, coinY: 751 },
+  { x: 1012, y: 604, price: "price 100", priceX: 1049, priceY: 760, coinX: 1145, coinY: 750,
+    fish: { src: "/images/home-angelfish.png", name: "Angelfish", id: "angelfish", cost: 100, x: 981, y: 569, w: 229, h: 216, flip: true,
+      crop: { left: "0", top: "0", width: "100%", height: "100%", objectFit: "cover" } } },
 ];
 
 function FishShop() {
+  const [{ balance, owned }, setAquarium] = useAquarium();
+  const [message, setMessage] = useState("");
+
+  // Buying deducts the price and adds the fish to the aquarium; fish already there can't be bought.
+  const buy = async ({ id, name, cost }) => {
+    if (owned.includes(id)) return setMessage(`The ${name.toLowerCase()} is already in your aquarium`);
+    try {
+      setAquarium(await api("POST", "/api/shop/buy", { fish: id }));
+      setMessage(`You bought the ${name.toLowerCase()} for ${cost} sand dollars!`);
+    } catch (err) {
+      setMessage(err.message === "Failed to fetch" ? "Couldn't reach the shop server" : err.message);
+    }
+  };
+
   return (
     <Layout title="Fish Shop" page="shop">
       <div className="crop aquarium">
@@ -571,7 +648,8 @@ function FishShop() {
         </div>
       </div>
 
-      <AquariumFish layout="narrow" />
+      <AquariumFish layout="narrow" owned={owned} />
+      <Bubbles />
 
       <div className="sidebar shop-sidebar"></div>
       <HomeLink />
@@ -580,27 +658,38 @@ function FishShop() {
 
       <div className="abs balance-bar"></div>
       <p className="abs balance-label">MY BALANCE</p>
-      <img className="abs sand-dollar" src="/images/sand-dollar.png" alt="Sand dollar" />
+      <img className="abs sand-dollar" src="/images/sand-dollar.png" alt="Sand dollars" />
+      <p className="abs balance-amount" aria-live="polite">{balance ?? "-"}</p>
 
       <div className="abs panel"></div>
       <ul className="shop-items">
         {items.map((item, i) => (
           <li key={i}>
-            <div className="abs card" style={{ left: item.x, top: item.y }} />
+            <button
+              className={"abs card" + (owned.includes(item.fish.id) ? " owned" : "")}
+              type="button"
+              style={{ left: item.x, top: item.y }}
+              aria-label={owned.includes(item.fish.id)
+                ? `${item.fish.name}, already in your aquarium`
+                : `Buy the ${item.fish.name.toLowerCase()} for ${item.fish.cost} sand dollars`}
+              onClick={() => buy(item.fish)}
+            >
+              {owned.includes(item.fish.id) && <span className="owned-tag">In aquarium</span>}
+            </button>
             <p className="abs price" style={{ left: item.priceX, top: item.priceY }}>
               {item.price}
             </p>
             <img className="abs coin" src="/images/sand-dollar.png" alt="sand dollars"
               style={{ left: item.coinX, top: item.coinY }} />
-            {item.fish && (
-              <div className="crop fish"
-                style={{ left: item.fish.x, top: item.fish.y, width: item.fish.w, height: item.fish.h }}>
-                <img src={item.fish.src} alt={item.fish.name} style={item.fish.crop} />
-              </div>
-            )}
+            <div className="crop fish"
+              style={{ left: item.fish.x, top: item.fish.y, width: item.fish.w, height: item.fish.h,
+                transform: item.fish.flip ? "scaleX(-1)" : undefined }}>
+              <img src={item.fish.src} alt="" style={item.fish.crop} />
+            </div>
           </li>
         ))}
       </ul>
+      {message && <p className="abs shop-message" aria-live="polite">{message}</p>}
 
       <div className="abs rot-7 seaweed-tall">
         <img src="/images/seaweed-tall.gif" alt="" />
@@ -659,6 +748,8 @@ function Calendar() {
       <div className="abs rot-7 seaweed-tall">
         <img src="/images/seaweed-tall.gif" alt="" />
       </div>
+
+      <Bubbles />
 
       <div className="sidebar calendar-sidebar"></div>
 
