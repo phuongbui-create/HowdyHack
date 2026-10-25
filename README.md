@@ -3,6 +3,7 @@
 A cozy study companion made for HowdyHack 2026 by Revati, Vaishnavi, Valeria and Phuong.
 
 Keep track of your classes and tasks, and grow an aquarium as you get work done.
+**Fun fact: All assets and background are hand-drawn!**
 
 - **To-do list**: add tasks with a "complete by" and "due" date (MM/DD); check a task off to earn 5 sand dollars
 - **Calendar**: a weekly view; add, edit, delete and drag entries between days
