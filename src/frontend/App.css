@@ -22,20 +22,22 @@ html, body { margin: 0; height: 100%; }
 body { background: var(--sidebar-bg); overflow: hidden; }
 
 .viewport {
-  display: grid;
-  place-items: center;
+  position: relative;
   width: 100vw;
   height: 100dvh;
+  overflow: hidden;
 }
 
+/* Centred in the window, then scaled; it's taken out of the flow so a window smaller than the canvas can't push it off-centre */
 .stage {
-  position: relative;
-  flex: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
   width: 1280px;
   height: 832px;
   overflow: hidden;
   background: var(--sidebar-bg);
-  transform: scale(var(--scale, 1));
+  transform: translate(-50%, -50%) scale(var(--scale, 1));
 }
 
 .abs { position: absolute; }
@@ -73,20 +75,52 @@ body { background: var(--sidebar-bg); overflow: hidden; }
 
 a { color: inherit; text-decoration: none; }
 
+/* House icon back to the home page; each page sets its left/top */
+.home-link { z-index: 1; width: 69px; height: 53.5px; transition: transform 0.15s ease; }
+.home-link img { position: absolute; left: -4.02px; top: -1.96px; }
+.home-link:hover,
+.home-link:focus-visible { transform: scale(1.08); }
+
+/* Fish bob gently up and down in place */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+
+.floating { animation: float 3.2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .floating { animation: none; }
+}
+
+/* Aquarium fish (see AquariumFish); size, position and crop come from the component */
+.aquarium-fish { position: absolute; pointer-events: none; }
+.fish-crop { inset: 0; }
+.fish-crop.flipped { transform: scaleX(-1); }
+
+.list-page .home-link { left: 640px; top: 20px; }
+.shop .home-link { left: 660px; top: 20px; }
+
 /* ---------- Home ---------- */
 .home .aquarium { left: 0; top: 0; width: 987px; height: 832px; }
 .home .rock { left: 0; top: -2px; width: 1280px; height: 834px; }
-.home .menu-sidebar { left: 893px; top: 0; width: 387px; height: 834px; }
-.home .seaweed-right { left: 1068px; top: 561px; width: 225px; height: 287px; }
+.home .menu-sidebar { left: 898px; top: 0; width: 387px; height: 834px; }
+.home .seaweed-right { left: 1031px; top: 561px; width: 225px; height: 287px; }
 
 .home .welcome {
-  left: 926px;
-  top: 57px;
-  width: 321px;
+  left: 938px;
+  top: 46px;
+  width: 354px;
   margin: 0;
-  font: 400 36px/normal var(--font-display);
-  color: white;
+  font: 400 48px/normal var(--font-hand);
+  color: var(--cream);
+  -webkit-text-stroke: 4px #1b76f0;
+  paint-order: stroke fill;
 }
+
+.home .credits { margin: 0; font: 400 16px/normal var(--font-display); color: white; }
+.home .credits.by { left: 1042px; top: 710px; width: 68px; }
+.home .credits.event { left: 1182px; top: 690px; width: 89px; }
 
 .home .menu-item { width: 127px; height: 120px; }
 .home .todo { left: 941px; top: 194px; }
@@ -99,8 +133,20 @@ a { color: inherit; text-decoration: none; }
   position: absolute;
   inset: 0;
   border-radius: 20px;
-  background: var(--tile);
+  background: white;
 }
+
+.home .calendar .tile { background: #fdf9f9; }
+
+/* Tile icons are cropped out of larger sticker sheets */
+.home .todo .icon { left: 8px; top: 7px; width: 105px; height: 105px; }
+.home .todo .icon img { left: -22.57%; top: -6.77%; width: 257.61%; height: 257.61%; }
+.home .calendar .icon { left: -18px; top: -20px; width: 163px; height: 163px; }
+.home .calendar .icon img { left: -46.62%; top: -0.25%; width: 342.78%; height: 342.78%; }
+.home .fish-shop .icon { left: 10px; top: 21px; width: 117px; height: 86px; }
+.home .fish-shop .icon img { left: -85.08%; top: -52.96%; width: 511.82%; height: 662.35%; }
+.home .gpa .icon { left: 14px; top: 9px; width: 101px; height: 101px; }
+.home .gpa .icon img { left: -45.26%; top: -8.45%; width: 433.87%; height: 433.87%; }
 
 .home .label {
   position: absolute;
@@ -129,6 +175,7 @@ a { color: inherit; text-decoration: none; }
 .list-page .todo-sidebar { left: 620px; top: -2px; width: 660px; height: 834px; }
 .list-page .title-banner { left: 424px; top: 37px; width: 433px; height: 107px; }
 
+
 .list-page .outlined {
   margin: 0;
   font-weight: 400;
@@ -139,7 +186,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .todo-page .title { left: 807px; top: 41px; width: 266px; font: 400 60px/normal var(--font-hand); }
-.gpa-page .title { left: 684px; top: 26px; width: 266px; font: 400 60px/normal 'Irish Grover', cursive; }
+.gpa-page .title { left: 728px; top: 26px; width: 266px; font: 400 60px/normal 'Irish Grover', cursive; }
 
 .list-page .my-tasks { left: 689px; top: 240px; width: 182px; font: 400 37px/normal var(--font-hand); }
 
@@ -209,13 +256,13 @@ a { color: inherit; text-decoration: none; }
 .list-page .days-left { left: 283px; top: 16px; width: 211px; }
 .list-page .due { left: 283px; top: 46px; width: 211px; }
 
-/* GPA: one cream bar per class, stacked and scrollable below "classes:" */
+/* To-do and GPA: one cream bar per entry, stacked and scrollable below the list label */
+.list-page .list-message { left: 880px; top: 250px; margin: 0; font: 400 20px/normal var(--font-body); color: var(--blush); }
 .gpa-page .gpa-value { margin-left: 12px; }
-.gpa-page .gpa-message { left: 880px; top: 250px; margin: 0; font: 400 20px/normal var(--font-body); color: var(--blush); }
 
 .list-page .action:disabled { opacity: 0.45; cursor: default; transform: none; }
 
-.gpa-page .class-list {
+.list-page .entry-list {
   left: 680px;
   top: 293px;
   width: 560px;
@@ -226,21 +273,20 @@ a { color: inherit; text-decoration: none; }
   overflow-y: auto;
 }
 
-.gpa-page .class-list .task { position: relative; left: 0; top: 0; margin: 4px 4px 14px; width: 542px; cursor: pointer; }
-.gpa-page .class-list .task:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
-.gpa-page .class-list .task.selected { border-color: var(--pink); box-shadow: 0 0 0 4px var(--pink); }
-.gpa-page .class-list .task.editing { background: #fff; cursor: default; }
+.list-page .entry-list .task { position: relative; left: 0; top: 0; margin: 4px 4px 14px; width: 542px; cursor: pointer; }
+.list-page .entry-list .task:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+.list-page .entry-list .task.selected { border-color: var(--pink); box-shadow: 0 0 0 4px var(--pink); }
+.list-page .entry-list .task.editing { background: #fff; cursor: default; }
 
-.gpa-page .empty-hint { margin-top: 8px; font: 400 26px/normal var(--font-hand); color: var(--cream); }
+.list-page .empty-hint { margin-top: 8px; font: 400 26px/normal var(--font-hand); color: var(--cream); }
 
-.gpa-page .field .value { color: var(--royal); }
-
-.gpa-page .field { display: flex; align-items: baseline; gap: 6px; }
+.list-page .entry-list .field { display: flex; align-items: baseline; gap: 6px; }
+.list-page .field .value { color: var(--royal); }
 .gpa-page .name { width: 200px; }
 .gpa-page .days-left { width: 255px; }
 
-.gpa-page .field input,
-.gpa-page .field select {
+.list-page .field input,
+.list-page .field select {
   min-width: 0;
   flex: 1;
   padding: 0 2px;
@@ -252,14 +298,150 @@ a { color: inherit; text-decoration: none; }
   outline: none;
 }
 
-.gpa-page .field select { flex: none; width: 60px; cursor: pointer; }
+.list-page .field select { flex: none; width: 60px; cursor: pointer; }
 
-.gpa-page .field input:focus,
-.gpa-page .field select:focus { border-bottom-color: var(--pink); }
+.list-page .field input:focus,
+.list-page .field select:focus { border-bottom-color: var(--pink); }
+
+/* To-do bar: name and "complete by" on the left, days left and due in the middle, check circle on the right */
+.todo-page .name { width: 196px; }
+.todo-page .name input::placeholder { color: var(--lavender); }
+.todo-page .days-left,
+.todo-page .due { width: 196px; }
+.todo-page .field input[inputmode] { flex: none; width: 76px; }
+.todo-page .field .value.overdue { color: var(--pink); }
+.todo-page .name .value { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+.todo-page .check {
+  position: absolute;
+  left: 486px;
+  top: 17px;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.todo-page .check img { display: block; pointer-events: none; }
+.todo-page .check:hover,
+.todo-page .check:focus-visible { transform: scale(1.1); outline: none; }
+
+/* Checked-off: a tick appears, then the bar fades away */
+.todo-page .check::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 10px;
+  width: 12px;
+  height: 22px;
+  border: solid white;
+  border-width: 0 5px 5px 0;
+  rotate: 45deg;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.todo-page .done .check::after { opacity: 1; }
+.todo-page .entry-list .task.done { opacity: 0; transition: opacity 0.35s ease 0.25s; }
 
 .list-page .seaweed-right { left: 1082px; top: 561px; width: 225px; height: 287px; }
 .list-page .seaweed-left { left: -26px; top: 417px; width: 326px; height: 428px; }
 .list-page .seaweed-tall { left: 97px; top: 278px; width: 350.558px; height: 590.256px; }
+
+/* ---------- Calendar ---------- */
+.calendar-page .aquarium { left: 0; top: 0; width: 987px; height: 832px; }
+.calendar-page .rock { left: 10px; top: -4px; width: 1230px; height: 834px; overflow: hidden; }
+.calendar-page .seaweed-mid { left: 433px; top: 417px; width: 276px; height: 457px; }
+.calendar-page .seaweed-tall { left: 97px; top: 278px; width: 350.558px; height: 590.256px; }
+.calendar-page .seaweed-left { left: -26px; top: 417px; width: 326px; height: 428px; }
+.calendar-page .calendar-sidebar { left: 150px; top: -2px; width: 1130px; height: 834px; }
+.calendar-page .title-banner { left: 445px; top: 18px; width: 433px; height: 107px; }
+
+/* Header: house, title and + centred over the week */
+.calendar-page .home-link { left: 445px; top: 41px; }
+
+.calendar-page .title {
+  left: 538px;
+  top: 26px;
+  margin: 0;
+  font: 400 70px/normal var(--font-hand);
+  color: var(--cream);
+  -webkit-text-stroke: 8px #3b62b4;
+  paint-order: stroke fill;
+  white-space: nowrap;
+}
+
+.calendar-page .add-event {
+  left: 885px;
+  top: 18px;
+  width: 100px;
+  height: 100px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.calendar-page .add-event img { width: 100px; height: 100px; object-fit: cover; pointer-events: none; }
+
+.calendar-page .add-event:hover,
+.calendar-page .add-event:focus-visible { transform: scale(1.08); }
+
+/* Seven columns fill the sidebar: 7 x 142px + 6 x 14px gaps */
+.calendar-page .week {
+  left: 172px;
+  top: 118px;
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calendar-page .day { width: 142px; }
+
+.calendar-page .day-name {
+  height: 46px;
+  margin: 0;
+  font: 400 28px/normal var(--font-hand);
+  color: white;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.calendar-page .day-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 646px;
+  margin: 0;
+  padding: 24px 8px;
+  border-radius: 10px;
+  background: var(--cream);
+  list-style: none;
+}
+
+.calendar-page .day:nth-child(even) .day-column { background: var(--pink); }
+
+.calendar-page .event {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  border-radius: 15px;
+  font: 400 17px/normal var(--font-hand);
+  color: black;
+  text-align: center;
+}
+
+.calendar-page .event.light { color: white; }
 
 /* ---------- Fish shop ---------- */
 .shop .aquarium,
