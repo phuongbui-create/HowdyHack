@@ -1,16 +1,182 @@
 ---
+import Layout from '../layouts/Layout.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Asthupihibliuro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="My Aquarium">
+	<div class="crop aquarium">
+		<img class="aquarium-img" src="/images/aquarium.png" alt="" />
+	</div>
+
+	<div class="abs rock">
+		<div class="crop rock-layer">
+			<img class="rock-img" src="/images/rock.png" alt="" />
+		</div>
+		<div class="sidebar menu-sidebar"></div>
+		<div class="crop seaweed-right">
+			<img class="seaweed-right-img" src="/images/seaweed.png" alt="" />
+		</div>
+
+		<h1 class="abs welcome">Welcome to<br />My Aquarium</h1>
+
+		<a class="abs menu-item todo" href="/todo">
+			<span class="tile"></span>
+			<span class="label">To-do</span>
+		</a>
+
+		<img class="abs row2-tiles" src="/images/menu-buttons-row2.svg" width="291" height="120" alt="" />
+
+		<div class="abs menu-item calendar">
+			<span class="tile"></span>
+			<span class="label">Calendar</span>
+		</div>
+
+		<a class="abs menu-item fish-shop" href="/fish-shop">
+			<span class="label">Fish shop</span>
+		</a>
+
+		<div class="crop seaweed-left">
+			<img class="seaweed-left-img" src="/images/seaweed-left.gif" alt="" />
+		</div>
+
+		<a class="abs menu-item gpa" href="/gpa">
+			<span class="label small">GPA calculator</span>
+		</a>
+
+		<div class="abs seaweed-mid">
+			<img class="fill" src="/images/seaweed-mid.gif" alt="" />
+		</div>
+	</div>
+
+	<div class="abs rot-7 seaweed-tall">
+		<img src="/images/seaweed-tall.gif" alt="" />
+	</div>
+</Layout>
+
+<style>
+	.aquarium {
+		left: 0;
+		top: 0;
+		width: 987px;
+		height: 832px;
+	}
+
+	.rock {
+		left: 0;
+		top: -2px;
+		width: 1280px;
+		height: 834px;
+	}
+
+	.rock-layer {
+		inset: 0;
+	}
+
+	.menu-sidebar {
+		left: 893px;
+		top: 0;
+		width: 387px;
+		height: 834px;
+	}
+
+	.seaweed-right {
+		left: 1068px;
+		top: 561px;
+		width: 225px;
+		height: 287px;
+	}
+
+	.welcome {
+		left: 926px;
+		top: 57px;
+		width: 321px;
+		margin: 0;
+		font: 400 36px/normal var(--font-display);
+		color: white;
+	}
+
+	.menu-item {
+		width: 127px;
+		height: 120px;
+	}
+
+	.todo {
+		left: 941px;
+		top: 194px;
+	}
+
+	.calendar {
+		left: 1102px;
+		top: 194px;
+	}
+
+	.fish-shop {
+		left: 941px;
+		top: 370px;
+	}
+
+	/* Matches the right-hand tile in menu-buttons-row2.svg (x 164) */
+	.gpa {
+		left: 1105px;
+		top: 370px;
+	}
+
+	.row2-tiles {
+		left: 941px;
+		top: 370px;
+	}
+
+	.tile {
+		position: absolute;
+		inset: 0;
+		border-radius: 20px;
+		background: var(--tile);
+	}
+
+	.label {
+		position: absolute;
+		left: 8px;
+		top: 128px;
+		width: 112px;
+		font: 400 24px/normal var(--font-display);
+		color: white;
+		text-align: center;
+	}
+
+	.label.small {
+		left: 9px;
+		top: 133px;
+		font-size: 16px;
+	}
+
+	a.menu-item {
+		border-radius: 20px;
+		transition: box-shadow 0.15s ease;
+	}
+
+	a.menu-item:hover,
+	a.menu-item:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 4px var(--pink);
+	}
+
+	.seaweed-left {
+		left: -40px;
+		top: 417px;
+		width: 326px;
+		height: 428px;
+	}
+
+	.seaweed-mid {
+		left: 437px;
+		top: 430px;
+		width: 276px;
+		height: 457px;
+	}
+
+	.seaweed-tall {
+		left: 83px;
+		top: 276px;
+		width: 350.558px;
+		height: 590.256px;
+	}
+</style>
